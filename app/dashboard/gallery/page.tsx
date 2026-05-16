@@ -366,7 +366,7 @@ export default function GalleryPage() {
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
 
               {/* Title block */}
-              <div className="md:ml-0 ml-12">
+              <div className="ml-0">
                 <p className="text-[0.55rem] tracking-[0.3em] uppercase mb-1" style={{ color: '#A89870', fontFamily: sf }}>
                   Koleksi Visual
                 </p>

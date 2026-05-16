@@ -144,7 +144,7 @@ export default function DashboardPage() {
         <header className="sticky top-0 z-20 backdrop-blur-md border-b" style={{ background: 'rgba(245,239,224,0.85)', borderColor: '#E4D6A9' }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between py-5">
-              <div className="md:ml-0 ml-12">
+              <div className="ml-0">
                 <h1 className="text-3xl font-normal tracking-tight" style={{ fontFamily: '"EB Garamond", Garamond, "Times New Roman", serif', color: '#622B14' }}>
                   Dashboard
                 </h1>

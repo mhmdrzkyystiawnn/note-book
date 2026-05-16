@@ -137,7 +137,7 @@ export default function AttendancePage() {
                   <p className="text-[10px] tracking-widest uppercase" style={{ color: '#978F66', fontFamily: 'Georgia, serif' }}>{today}</p>
                 </div>
               </div>
-              <Link href="/dashboard/analytics" className="px-4 py-2 rounded-full text-xs tracking-widest uppercase transition-all duration-150"
+              <Link href="/dashboard/analytics" className="px-4 py-2 mr-12 mb-4 rounded-full text-xs tracking-widest uppercase transition-all duration-150"
                 style={{ background: 'rgba(98,43,20,0.08)', color: '#622B14', fontFamily: 'Georgia, serif' }}>
                 ▲ Analitik
               </Link>
