@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/components/Toast';
 import Sidebar from '@/components/Sidebar';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -209,15 +211,18 @@ function PhotoCard({ note, onPreview, onDelete, index }: {
       onMouseLeave={() => setHovered(false)}
       onClick={() => onPreview(note)}
     >
-      <img
-        src={note.image_url}
-        alt={note.title}
-        className="w-full h-full object-cover"
-        style={{
-          transition: 'transform 0.6s cubic-bezier(0.16,1,0.3,1)',
-          transform: hovered ? 'scale(1.08)' : 'scale(1)',
-        }}
-      />
+      {note.image_url && (
+        <Image
+          src={note.image_url}
+          alt={note.title}
+          fill
+          className="w-full h-full object-cover"
+          style={{
+            transition: 'transform 0.6s cubic-bezier(0.16,1,0.3,1)',
+            transform: hovered ? 'scale(1.08)' : 'scale(1)',
+          }}
+        />
+      )}
 
       {/* Gradient overlay */}
       <div
@@ -276,12 +281,13 @@ function PhotoCard({ note, onPreview, onDelete, index }: {
 export default function GalleryPage() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [selectedAspect, setSelectedAspect] = useState<AspectValue>(undefined);
   const [search, setSearch] = useState('');
   const [previewNote, setPreviewNote] = useState<Note | null>(null);
   const router = useRouter();
   const supabase = createClient();
+  const toast = useToast();
 
   useEffect(() => {
     const load = async () => {
@@ -299,7 +305,7 @@ export default function GalleryPage() {
       finally { setLoading(false); }
     };
     load();
-  }, []);
+  }, [router, supabase]);
 
   const handleDeleteNote = useCallback(async (id: string) => {
     if (!confirm('Yakin ingin menghapus foto ini?')) return;
@@ -309,9 +315,12 @@ export default function GalleryPage() {
       if (parts[1]) await supabase.storage.from('note-images').remove([parts[1]]);
     }
     const { error } = await supabase.from('notes').delete().eq('id', id);
-    if (error) alert('Gagal menghapus');
-    else setNotes(prev => prev.filter(n => n.id !== id));
-  }, [notes, supabase]);
+    if (error) toast.showToast('Gagal menghapus', 'error');
+    else {
+      setNotes(prev => prev.filter(n => n.id !== id));
+      toast.showToast('Foto berhasil dihapus', 'success');
+    }
+  }, [notes, supabase, toast]);
 
   const photoNotes = notes.filter(n => n.image_url);
 
@@ -342,7 +351,7 @@ export default function GalleryPage() {
   return (
     <div className="flex min-h-screen" style={{ background: '#F5EFE0' }}>
       <Sidebar user={user} />
-      <main className="flex-1 flex flex-col min-w-0 md:pl-[256px]">
+      <main className="flex-1 flex flex-col min-w-0 md:pl-64">
 
         {/* Header */}
         <header
@@ -357,7 +366,7 @@ export default function GalleryPage() {
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
 
               {/* Title block */}
-              <div>
+              <div className="md:ml-0 ml-12">
                 <p className="text-[0.55rem] tracking-[0.3em] uppercase mb-1" style={{ color: '#A89870', fontFamily: sf }}>
                   Koleksi Visual
                 </p>

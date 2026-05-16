@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
+import { useToast } from './Toast';
 
 interface AttendanceRecord {
   id: string;
@@ -27,13 +28,14 @@ export default function AttendanceCard({
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const supabase = createClient();
+  const toast = useToast();
 
   const hasCheckedIn = !!todayAttendance;
   const hasCheckedOut = !!todayAttendance?.check_out;
 
   const handleCheckIn = async () => {
     if (hasCheckedIn) {
-      alert('Anda sudah check in hari ini.');
+      toast.showToast('Anda sudah check in hari ini.', 'info');
       return;
     }
     try {
@@ -51,10 +53,10 @@ export default function AttendanceCard({
 
       if (error) throw error;
       setNotes('');
-      alert('✅ Check in berhasil!');
+      toast.showToast('✅ Check in berhasil!', 'success');
       onCheckInSuccess();
     } catch {
-      alert('❌ Gagal check in.');
+      toast.showToast('❌ Gagal check in.', 'error');
     } finally {
       setLoading(false);
     }
@@ -62,11 +64,11 @@ export default function AttendanceCard({
 
   const handleCheckOut = async () => {
     if (!todayAttendance) {
-      alert('Anda belum check in.');
+      toast.showToast('Anda belum check in.', 'info');
       return;
     }
     if (hasCheckedOut) {
-      alert('Anda sudah check out hari ini.');
+      toast.showToast('Anda sudah check out hari ini.', 'info');
       return;
     }
     try {
@@ -84,10 +86,10 @@ export default function AttendanceCard({
 
       if (error) throw error;
       setNotes('');
-      alert(`✅ Check out berhasil! ${Math.round(workingHours * 100) / 100} jam kerja.`);
+      toast.showToast(`✅ Check out berhasil! ${Math.round(workingHours * 100) / 100} jam kerja.`, 'success');
       onCheckOutSuccess();
     } catch {
-      alert('❌ Gagal check out.');
+      toast.showToast('❌ Gagal check out.', 'error');
     } finally {
       setLoading(false);
     }

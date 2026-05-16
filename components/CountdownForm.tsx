@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useToast } from './Toast';
 
 interface CountdownFormProps {
   onSubmit: (data: { title: string; description: string; start_date: string; end_date: string; color: string }) => Promise<void>;
@@ -13,11 +14,18 @@ export default function CountdownForm({ onSubmit, isLoading }: CountdownFormProp
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState('');
   const [color, setColor] = useState('mahoni');
+  const toast = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) { alert('Judul tidak boleh kosong'); return; }
-    if (!startDate || !endDate) { alert('Tanggal awal dan akhir harus diisi'); return; }
+    if (!title.trim()) {
+      toast.showToast('Judul tidak boleh kosong', 'error');
+      return;
+    }
+    if (!startDate || !endDate) {
+      toast.showToast('Tanggal awal dan akhir harus diisi', 'error');
+      return;
+    }
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -27,11 +35,11 @@ export default function CountdownForm({ onSubmit, isLoading }: CountdownFormProp
     end.setHours(0, 0, 0, 0);
 
     if (start < today) {
-      alert('Tanggal awal tidak boleh kurang dari hari ini (tidak boleh kemarin atau sebelumnya)');
+      toast.showToast('Tanggal awal tidak boleh kurang dari hari ini (tidak boleh kemarin atau sebelumnya)', 'error');
       return;
     }
     if (start >= end) {
-      alert('Tanggal akhir harus lebih besar dari tanggal awal');
+      toast.showToast('Tanggal akhir harus lebih besar dari tanggal awal', 'error');
       return;
     }
 
@@ -49,7 +57,7 @@ export default function CountdownForm({ onSubmit, isLoading }: CountdownFormProp
     { value: 'krem',     label: 'Krem',     hex: '#E4D6A9' },
   ];
 
-  const getColorHex = (val: string) => colors.find(c => c.value === val)?.hex || '#622B14';
+  // const getColorHex = (val: string) => colors.find(c => c.value === val)?.hex || '#622B14';
 
   const inputStyle: React.CSSProperties = {
     background: '#F8F3EA',

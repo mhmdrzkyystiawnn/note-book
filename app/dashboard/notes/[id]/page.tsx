@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useToast } from '@/components/Toast';
 
 interface Note {
   id: string;
@@ -95,7 +97,7 @@ export default function NoteDetailPage() {
   const [note, setNote] = useState<Note | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const [copied, setCopied] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
@@ -103,6 +105,7 @@ export default function NoteDetailPage() {
   const params = useParams();
   const noteId = params.id as string;
   const supabase = createClient();
+  const toast = useToast();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 28);
@@ -124,9 +127,10 @@ export default function NoteDetailPage() {
       finally { setLoading(false); }
     };
     loadNote();
-  }, [noteId]);
+  }, [noteId, router, supabase]);
 
   const handleDeleteNote = async () => {
+    if (!user) return;
     if (!confirm('Yakin ingin menghapus catatan ini?')) return;
     setDeleting(true);
     try {
@@ -135,9 +139,13 @@ export default function NoteDetailPage() {
         await supabase.storage.from('note-images').remove([`${user.id}/${urlParts[urlParts.length - 1]}`]);
       }
       const { error } = await supabase.from('notes').delete().eq('id', noteId).eq('user_id', user.id);
-      if (error) { alert('Gagal menghapus note'); return; }
+      if (error) {
+        toast.showToast('Gagal menghapus note', 'error');
+        return;
+      }
+      toast.showToast('Note berhasil dihapus', 'success');
       router.push('/dashboard');
-    } catch { alert('Terjadi kesalahan saat menghapus note'); }
+    } catch { toast.showToast('Terjadi kesalahan saat menghapus note', 'error'); }
     finally { setDeleting(false); }
   };
 
@@ -191,9 +199,9 @@ export default function NoteDetailPage() {
   const day = getDayName(note.created_at);
   const isEdited = note.updated_at !== note.created_at;
 
-  // Drop cap: huruf pertama dari konten
-  const firstChar = note.content.trim()[0] ?? '';
-  const restContent = note.content.trim().slice(1);
+  // Drop cap: huruf pertama dari konten (unused for current design)
+  // const firstChar = note.content.trim()[0] ?? '';
+  // const restContent = note.content.trim().slice(1);
 
   return (
     <div className="min-h-screen" style={{ background: '#F5EFE0' }}>
@@ -511,18 +519,21 @@ export default function NoteDetailPage() {
                     <span className="text-[0.6rem] tracking-[0.2em] uppercase"
                       style={{ color: '#C4A97D', fontFamily: georgiaFont }}>Gambar Terlampir</span>
                   </div>
-                  <div className="relative overflow-hidden group">
+                  <div 
+                    className="relative overflow-hidden group"
+                    style={{ aspectRatio: note.aspect_ratio ? String(note.aspect_ratio) : '16/9' }}
+                  >
                     {!imgLoaded && (
                       <div className="absolute inset-0 animate-pulse"
                         style={{ background: 'linear-gradient(90deg,#E4D6A9 25%,#EDE3C8 50%,#E4D6A9 75%)', backgroundSize: '200% auto' }} />
                     )}
-                    <img
+                    <Image
                       src={note.image_url}
                       alt={note.title}
+                      fill
                       onLoad={() => setImgLoaded(true)}
                       className="w-full object-cover transition-transform duration-700 group-hover:scale-[1.025]"
                       style={{
-                        aspectRatio: note.aspect_ratio ? String(note.aspect_ratio) : '16/9',
                         opacity: imgLoaded ? 1 : 0,
                         transition: 'opacity .5s ease, transform .7s ease',
                       }}

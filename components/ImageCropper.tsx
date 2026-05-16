@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
 import type { Area, Point } from 'react-easy-crop';
+import { useToast } from './Toast';
 
 interface ImageCropperProps {
   imagePreview: string;
@@ -29,6 +30,7 @@ export default function ImageCropper({
   const [zoom, setZoom] = useState(1);
   const [aspect, setAspect] = useState<number | undefined>(undefined);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const toast = useToast();
 
   const onCropComplete = useCallback(
     (_: Area, croppedAreaPixels: Area) => {
@@ -39,7 +41,7 @@ export default function ImageCropper({
 
   const handleCrop = async () => {
     if (!croppedAreaPixels) {
-      alert('Silakan crop area terlebih dahulu');
+      toast.showToast('Silakan crop area terlebih dahulu', 'error');
       return;
     }
 
@@ -50,7 +52,7 @@ export default function ImageCropper({
       onCrop(croppedImage, aspectRatio);
     } catch (error) {
       console.error('Crop error:', error);
-      alert('Gagal melakukan crop gambar');
+      toast.showToast('Gagal melakukan crop gambar', 'error');
     }
   };
 

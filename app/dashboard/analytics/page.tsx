@@ -313,7 +313,7 @@ function MoodTrackerCard({ mood }: { mood: MoodStats }) {
 }
 
 export default function AnalyticsPage() {
-  const [user, setUser]         = useState<any>(null);
+  const [user, setUser]         = useState<{ id: string; email?: string } | null>(null);
   const [loading, setLoading]   = useState(true);
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [moodStats, setMoodStats] = useState<MoodStats | null>(null);
@@ -420,7 +420,7 @@ export default function AnalyticsPage() {
       }
     };
     load();
-  }, []);
+  }, [router, supabase]);
 
   const getMonthlyData = () =>
     attendance.filter((r) => {

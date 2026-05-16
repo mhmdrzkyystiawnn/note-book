@@ -34,8 +34,8 @@ const floatingCards = [
 ];
 
 export default function Home() {
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ email?: string; user_metadata?: { name?: string } } | null>(null);
+
   const router = useRouter();
   const supabase = createClient();
 
@@ -47,14 +47,12 @@ export default function Home() {
           setUser(user);
           setTimeout(() => router.push('/dashboard'), 900);
         }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
+      } catch (_err) {
+        console.error(_err);
       }
     };
     checkAuth();
-  }, []);
+  }, [router, supabase]);
 
   if (user) {
     return (
@@ -265,7 +263,7 @@ export default function Home() {
           className="mb-28 max-w-2xl mx-auto text-center"
         >
           <p className="text-3xl sm:text-4xl font-normal leading-snug mb-6" style={{ fontFamily: gf, color: '#3D1E0A', fontStyle: 'italic' }}>
-            "Pikiran terbaik datang saat Anda memiliki tempat yang tenang untuk menulisnya."
+            &quot;Pikiran terbaik datang saat Anda memiliki tempat yang tenang untuk menulisnya.&quot;
           </p>
           <div className="flex items-center justify-center gap-3">
             <div className="w-12 h-px" style={{ background: '#D9C9A8' }} />

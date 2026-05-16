@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import Masonry from 'react-masonry-css';
 
 interface Note {
@@ -71,9 +72,10 @@ export default function NoteList({ notes, onDelete }: NoteListProps) {
                     className="w-full overflow-hidden bg-[#F0E9D8] relative"
                     style={{ aspectRatio: `${aspectRatio} / 1` }}
                   >
-                    <img
+                    <Image
                       src={note.image_url}
                       alt={note.title}
+                      fill
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>

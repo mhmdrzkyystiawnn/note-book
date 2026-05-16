@@ -4,9 +4,11 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useToast } from '@/components/Toast';
 import ImageCropper from '@/components/ImageCropper';
 
 interface Note {
@@ -39,7 +41,7 @@ export default function EditNotePage() {
   const [aspectRatio, setAspectRatio]   = useState<number | undefined>(undefined);
   const [loading, setLoading]     = useState(true);
   const [saving, setSaving]       = useState(false);
-  const [user, setUser]           = useState<any>(null);
+  const [user, setUser]           = useState<{ id: string; email?: string } | null>(null);
   const [dragOver, setDragOver]   = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -47,6 +49,7 @@ export default function EditNotePage() {
   const params = useParams();
   const noteId = params.id as string;
   const supabase = createClient();
+  const toast = useToast();
 
   useEffect(() => {
     const load = async () => {
@@ -66,11 +69,17 @@ export default function EditNotePage() {
       finally { setLoading(false); }
     };
     load();
-  }, [noteId]);
+  }, [noteId, router, supabase]);
 
   const processFile = (file: File) => {
-    if (!file.type.startsWith('image/')) { alert('Hanya file gambar'); return; }
-    if (file.size > 5 * 1024 * 1024) { alert('Maksimal 5MB'); return; }
+    if (!file.type.startsWith('image/')) {
+      toast.showToast('Hanya file gambar', 'error');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.showToast('Maksimal 5MB', 'error');
+      return;
+    }
     setRemoveImage(false);
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -102,7 +111,11 @@ export default function EditNotePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !content.trim()) { alert('Judul dan konten tidak boleh kosong'); return; }
+    if (!user) return;
+    if (!title.trim() || !content.trim()) {
+      toast.showToast('Judul dan konten tidak boleh kosong', 'error');
+      return;
+    }
     setSaving(true);
     try {
       let imageUrl = removeImage ? null : note?.image_url;
@@ -119,12 +132,16 @@ export default function EditNotePage() {
         }
         const fileName = `${user.id}/${Date.now()}-${imageFile.name}`;
         const { error: upErr } = await supabase.storage.from('note-images').upload(fileName, imageFile);
-        if (upErr) { alert('Gagal upload gambar'); setSaving(false); return; }
+        if (upErr) {
+          toast.showToast('Gagal upload gambar', 'error');
+          setSaving(false);
+          return;
+        }
         const { data: urlData } = supabase.storage.from('note-images').getPublicUrl(fileName);
         imageUrl = urlData?.publicUrl;
       }
 
-      const updateData: any = {
+      const updateData: Record<string, unknown> = {
         title, content, emotion,
         image_url: imageUrl,
         updated_at: new Date().toISOString(),
@@ -136,9 +153,12 @@ export default function EditNotePage() {
 
       const { error } = await supabase.from('notes').update(updateData).eq('id', noteId).eq('user_id', user.id);
 
-      if (error) alert('Gagal memperbarui catatan');
-      else router.push(`/dashboard/notes/${noteId}`);
-    } catch { alert('Terjadi kesalahan'); }
+      if (error) toast.showToast('Gagal memperbarui catatan', 'error');
+      else {
+        toast.showToast('Catatan berhasil diperbarui', 'success');
+        router.push(`/dashboard/notes/${noteId}`);
+      }
+    } catch { toast.showToast('Terjadi kesalahan', 'error'); }
     finally { setSaving(false); }
   };
 
@@ -400,7 +420,7 @@ export default function EditNotePage() {
                   <div className="p-4">
                     {imagePreview && !removeImage ? (
                       <div className="relative rounded-xl overflow-hidden" style={{ background: '#F0E9D8' }}>
-                        <img src={imagePreview} alt="Preview" className="w-full object-cover max-h-52" />
+                    <Image src={imagePreview} alt="Preview" width={500} height={224} className="w-full max-h-56 object-cover" />
                         <div
                           className="absolute inset-0 flex items-end justify-end p-2"
                           style={{ background: 'linear-gradient(to top, rgba(42,18,8,0.3) 0%, transparent 60%)' }}

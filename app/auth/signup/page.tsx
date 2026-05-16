@@ -61,7 +61,7 @@ export default function SignupPage() {
           router.refresh();
         }
       }
-    } catch (err) {
+    } catch {
       setError('Terjadi kesalahan. Coba lagi.');
     } finally {
       setLoading(false);

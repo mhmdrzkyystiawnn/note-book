@@ -5,9 +5,18 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 
+type SidebarUser = {
+  email?: string;
+  user_metadata?: {
+    name?: string;
+  };
+};
+
 interface SidebarProps {
-  user?: any;
+  user: SidebarUser | null;
 }
+
+
 
 const navItems = [
   { href: '/dashboard', icon: '⌂', label: 'Dashboard' },
@@ -54,7 +63,7 @@ export default function Sidebar({ user }: SidebarProps) {
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Toggle menu"
-        className="fixed top-4 left-4 z-50 md:hidden w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200"
+        className="fixed top-4 right-4 z-50 md:hidden w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200"
         style={{ background: '#FFFDF7', border: '1px solid #E4D6A9', color: '#622B14', boxShadow: '0 2px 8px rgba(98,43,20,0.08)' }}
       >
         <span className="text-base leading-none">{isOpen ? '✕' : '☰'}</span>

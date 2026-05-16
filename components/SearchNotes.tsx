@@ -30,10 +30,10 @@ export default function SearchNotes({
     onMoodsChange(newMoods);
   };
 
-  const clearAllFilters = () => {
-    onSearchChange('');
-    onMoodsChange([]);
-  };
+  // const clearAllFilters = () => {
+  //   onSearchChange('');
+  //   onMoodsChange([]);
+  // };
 
   const hasActiveFilters = searchQuery || selectedMoods.length > 0;
 

@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';import { useToast } from '@/components/Toast';import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import CountdownForm from '@/components/CountdownForm';
 import CountdownCard from '@/components/CountdownCard';
@@ -45,9 +44,12 @@ export default function DashboardPage() {
   const [todayAttendance, setTodayAttendance] = useState<AttendanceRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [submittingCountdown, setSubmittingCountdown] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ id: string; email?: string; user_metadata?: { name?: string } } | null>(null);
+
+
   const router = useRouter();
   const supabase = createClient();
+  const toast = useToast();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -76,7 +78,7 @@ export default function DashboardPage() {
         } finally {
           setLoading(false);
         }
-      } catch (error) {
+      } catch {
         setLoading(false);
         router.push('/auth/login');
       }
@@ -84,31 +86,12 @@ export default function DashboardPage() {
     checkAuth();
   }, [router, supabase]);
 
-  const handleAddNote = async (title: string, content: string, imageFile?: File, emotion?: string) => {
-    try {
-      let imageUrl: string | undefined;
-      if (imageFile) {
-        const fileName = `${user.id}/${Date.now()}-${imageFile.name}`;
-        const { error: uploadError } = await supabase.storage.from('note-images').upload(fileName, imageFile);
-        if (uploadError) { alert('Gagal mengupload gambar'); return; }
-        const { data: publicUrlData } = supabase.storage.from('note-images').getPublicUrl(fileName);
-        imageUrl = publicUrlData?.publicUrl;
-      }
-      const { data, error } = await supabase
-        .from('notes').insert([{ title, content, image_url: imageUrl, emotion: emotion || '😊', user_id: user.id }]).select();
-      if (error) { alert('Gagal menambah note'); }
-      else if (data) { setNotes([data[0], ...notes]); alert('Note berhasil disimpan!'); }
-    } catch (error) {
-      alert('Terjadi kesalahan saat menyimpan note');
-    }
-  };
-
-  const handleDeleteNote = async (id: string) => {
-    if (!confirm('Yakin ingin menghapus note ini?')) return;
-    const { error } = await supabase.from('notes').delete().eq('id', id);
-    if (error) alert('Gagal menghapus note');
-    else setNotes(notes.filter(note => note.id !== id));
-  };
+  // const handleDeleteNote = async (id: string) => {
+  //   if (!confirm('Yakin ingin menghapus note ini?')) return;
+  //   const { error } = await supabase.from('notes').delete().eq('id', id);
+  //   if (error) alert('Gagal menghapus note');
+  //   else setNotes(notes.filter(note => note.id !== id));
+  // };
 
   const handleCreateCountdown = async (data: { title: string; description: string; start_date: string; end_date: string; color: string }) => {
     if (!user?.id) return;
@@ -116,8 +99,11 @@ export default function DashboardPage() {
       setSubmittingCountdown(true);
       const { data: insertedData, error } = await supabase
         .from('countdowns').insert([{ ...data, user_id: user.id }]).select();
-      if (error) alert('Gagal membuat countdown');
-      else if (insertedData) { setCountdowns([insertedData[0], ...countdowns]); alert('Countdown berhasil dibuat!'); }
+    if (error) toast.showToast('Gagal membuat countdown', 'error');
+    else if (insertedData) {
+      setCountdowns([insertedData[0], ...countdowns]);
+      toast.showToast('Countdown berhasil dibuat!', 'success');
+    }
     } finally {
       setSubmittingCountdown(false);
     }
@@ -125,8 +111,11 @@ export default function DashboardPage() {
 
   const handleDeleteCountdown = async (id: string) => {
     const { error } = await supabase.from('countdowns').delete().eq('id', id);
-    if (error) alert('Gagal menghapus countdown');
-    else setCountdowns(countdowns.filter(c => c.id !== id));
+    if (error) toast.showToast('Gagal menghapus countdown', 'error');
+    else {
+      setCountdowns(prev => prev.filter(c => c.id !== id));
+      toast.showToast('Countdown berhasil dihapus', 'success');
+    }
   };
 
   const refreshAttendance = async () => {
@@ -149,12 +138,13 @@ export default function DashboardPage() {
   return (
     <div className="flex min-h-screen" style={{ background: '#F5EFE0' }}>
       <Sidebar user={user} />
+
       <main className="flex-1 flex flex-col min-w-0 md:pl-[256px]">
         {/* Header */}
         <header className="sticky top-0 z-20 backdrop-blur-md border-b" style={{ background: 'rgba(245,239,224,0.85)', borderColor: '#E4D6A9' }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between py-5">
-              <div>
+              <div className="md:ml-0 ml-12">
                 <h1 className="text-3xl font-normal tracking-tight" style={{ fontFamily: '"EB Garamond", Garamond, "Times New Roman", serif', color: '#622B14' }}>
                   Dashboard
                 </h1>

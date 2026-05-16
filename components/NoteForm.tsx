@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Image from 'next/image';
 import ImageCropper from './ImageCropper';
+import { useToast } from './Toast';
 
 interface NoteFormProps {
   onSubmit: (title: string, content: string, imageFile?: File, emotion?: string, aspectRatio?: number) => Promise<void>;
@@ -20,14 +22,15 @@ export default function NoteForm({ onSubmit }: NoteFormProps) {
   const [loading, setLoading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const toast = useToast();
 
   const processImageFile = (file: File) => {
     if (!file.type.startsWith('image/')) {
-      alert('Hanya file gambar yang diperbolehkan');
+      toast.showToast('Hanya file gambar yang diperbolehkan', 'error');
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      alert('Ukuran file tidak boleh lebih dari 5MB');
+      toast.showToast('Ukuran file tidak boleh lebih dari 5MB', 'error');
       return;
     }
     const reader = new FileReader();
@@ -49,13 +52,13 @@ export default function NoteForm({ onSubmit }: NoteFormProps) {
       };
       reader.onerror = () => {
         console.error('Error reading cropped file');
-        alert('Gagal membaca file yang sudah di-crop');
+        toast.showToast('Gagal membaca file yang sudah di-crop', 'error');
       };
       reader.readAsDataURL(croppedFile);
       setShowCropper(false);
     } catch (error) {
       console.error('Crop complete error:', error);
-      alert('Error saat memproses gambar yang sudah di-crop');
+      toast.showToast('Error saat memproses gambar yang sudah di-crop', 'error');
     }
   };
 
@@ -81,7 +84,7 @@ export default function NoteForm({ onSubmit }: NoteFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) {
-      alert('Judul dan konten tidak boleh kosong');
+      toast.showToast('Judul dan konten tidak boleh kosong', 'error');
       return;
     }
     setLoading(true);
@@ -184,9 +187,11 @@ export default function NoteForm({ onSubmit }: NoteFormProps) {
         {imagePreview ? (
           /* Preview gambar */
           <div className="relative rounded-xl overflow-hidden border border-[#E4D6A9] bg-[#F0E9D8]">
-            <img
+            <Image
               src={imagePreview}
               alt="Preview"
+              width={500}
+              height={224}
               className="w-full max-h-56 object-cover"
             />
             <div className="absolute inset-x-0 bottom-0 flex items-center justify-between px-3 py-2 bg-gradient-to-t from-black/60 to-transparent">

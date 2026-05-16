@@ -27,7 +27,7 @@ function StatCard({ label, value, sub, accent }: { label: string; value: string;
 }
 
 export default function AttendancePage() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [todayAttendance, setTodayAttendance] = useState<AttendanceRecord | null>(null);
   const [isCheckedIn, setIsCheckedIn] = useState(false);
@@ -58,7 +58,7 @@ export default function AttendancePage() {
       finally { setLoading(false); }
     };
     loadAttendance();
-  }, []);
+  }, [router, supabase]);
 
   const handleCheckIn = async () => {
     if (!user) return;

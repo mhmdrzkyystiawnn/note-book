@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/components/Toast';
 import Sidebar from '@/components/Sidebar';
 import NoteList from '@/components/NoteList';
 import NoteForm from '@/components/NoteForm';
@@ -27,13 +28,14 @@ const georgiaFont = 'Georgia, serif';
 export default function NotesPage() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMoods, setSelectedMoods] = useState<string[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const router = useRouter();
   const supabase = createClient();
+  const toast = useToast();
 
   useEffect(() => {
     const fetchNotes = async () => {
@@ -41,25 +43,28 @@ export default function NotesPage() {
         const { data: { user: authUser } } = await supabase.auth.getUser();
         if (!authUser) { router.push('/auth/login'); return; }
         setUser(authUser);
-        const { data, error } = await supabase.from('notes').select('*').eq('user_id', authUser.id).order('created_at', { ascending: false });
-        if (!error) setNotes(data || []);
+        const { data: notesData } = await supabase.from('notes').select('*').eq('user_id', authUser.id).order('created_at', { ascending: false });
+        setNotes(notesData || []);
       } catch { router.push('/auth/login'); }
       finally { setLoading(false); }
     };
     fetchNotes();
-  }, []);
+  }, [router, supabase]);
 
   const handleDeleteNote = async (id: string) => {
     if (!confirm('Yakin ingin menghapus note ini?')) return;
     const { error } = await supabase.from('notes').delete().eq('id', id);
-    if (error) alert('Gagal menghapus note');
-    else setNotes(prev => prev.filter(n => n.id !== id));
+    if (error) toast.showToast('Gagal menghapus note', 'error');
+    else {
+      setNotes(prev => prev.filter(n => n.id !== id));
+      toast.showToast('Note berhasil dihapus', 'success');
+    }
   };
 
   const uploadImage = async (file: File, userId: string): Promise<string | null> => {
     const fileExt = file.name.split('.').pop();
     const fileName = `${userId}/${Date.now()}.${fileExt}`;
-    const { error, data } = await supabase.storage.from('note-images').upload(fileName, file);
+    const { error } = await supabase.storage.from('note-images').upload(fileName, file);
     if (error) return null;
     const { data: { publicUrl } } = supabase.storage.from('note-images').getPublicUrl(fileName);
     return publicUrl;
@@ -82,7 +87,7 @@ export default function NotesPage() {
     };
     const { data, error } = await supabase.from('notes').insert([newNote]).select().single();
     if (error) {
-      alert('Gagal menyimpan catatan');
+      toast.showToast('Gagal menyimpan catatan', 'error');
       throw error;
     }
     setNotes(prev => [data, ...prev]);
@@ -120,21 +125,21 @@ export default function NotesPage() {
         <header className="sticky top-0 z-20 backdrop-blur-md border-b" style={{ background: 'rgba(245,239,224,0.85)', borderColor: '#E4D6A9' }}>
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between py-5 gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 flex items-center justify-center rounded-xl" style={{ background: 'rgba(98,43,20,0.08)' }}>
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 flex items-center justify-center rounded-xl shrink-0" style={{ background: 'rgba(98,43,20,0.08)' }}>
                   <span style={{ color: '#622B14' }}>◻</span>
                 </div>
-                <div>
-                  <h1 className="text-2xl font-normal" style={{ fontFamily: garamondFont, color: '#622B14' }}>Catatan</h1>
-                  <p className="text-[10px] tracking-widest uppercase" style={{ color: '#978F66', fontFamily: georgiaFont }}>
+                <div className="min-w-0">
+                  <h1 className="text-2xl font-normal truncate" style={{ fontFamily: garamondFont, color: '#622B14' }}>Catatan</h1>
+                  <p className="text-[10px] tracking-widest uppercase truncate" style={{ color: '#978F66', fontFamily: georgiaFont }}>
                     {filteredNotes.length} dari {notes.length} catatan
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 md:gap-3 shrink-0">
                 <button
                   onClick={() => setShowCalendar(!showCalendar)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-[#995F2F] hover:bg-[#622B14] text-white transition-all duration-150 shadow-sm"
+                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-[#995F2F] hover:bg-[#622B14] text-white transition-all duration-150 shadow-sm"
                   title="Buka kalender"
                 >
                   <span className="text-base">📅</span>
@@ -197,7 +202,7 @@ export default function NotesPage() {
           >
             {searchQuery && (
               <p className="text-xs mb-4" style={{ color: '#978F66', fontFamily: georgiaFont }}>
-                {filteredNotes.length} hasil untuk <span style={{ color: '#995F2F', fontStyle: 'italic' }}>"{searchQuery}"</span>
+                {filteredNotes.length} hasil untuk <span style={{ color: '#995F2F', fontStyle: 'italic' }}>&quot;{searchQuery}&quot;</span>
                 {selectedMoods.length > 0 && ` dan mood ${selectedMoods.join('')}`}
               </p>
             )}
