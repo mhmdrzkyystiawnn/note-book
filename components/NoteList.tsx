@@ -17,7 +17,7 @@ interface Note {
 
 interface NoteListProps {
   notes: Note[];
-  onDelete: (id: string) => Promise<void>;
+  onDelete: (id: string, imageUrl?: string) => Promise<void>;
 }
 
 export default function NoteList({ notes, onDelete }: NoteListProps) {

@@ -51,13 +51,42 @@ export default function NotesPage() {
     fetchNotes();
   }, [router, supabase]);
 
-  const handleDeleteNote = async (id: string) => {
-    if (!confirm('Yakin ingin menghapus note ini?')) return;
-    const { error } = await supabase.from('notes').delete().eq('id', id);
-    if (error) toast.showToast('Gagal menghapus note', 'error');
-    else {
-      setNotes(prev => prev.filter(n => n.id !== id));
+  const deleteNoteImageIfNeeded = async (imageUrl?: string) => {
+    if (!imageUrl) return;
+
+    // image_url kamu formatnya publik URL Storage, contoh:
+    // https://.../storage/v1/object/public/note-images/<userId>/<file>
+    // Kita ambil path setelah "note-images/".
+    const marker = '/note-images/';
+    const idx = imageUrl.indexOf(marker);
+    if (idx === -1) return;
+
+    const imagePath = imageUrl.slice(idx + marker.length);
+    if (!imagePath) return;
+
+    await supabase.storage.from('note-images').remove([imagePath]);
+  };
+
+  const handleDeleteNote = async (id: string, imageUrl?: string) => {
+    if (!confirm('Yakin ingin menghapus note ini? Gambar akan ikut terhapus.')) return;
+
+    try {
+      await deleteNoteImageIfNeeded(imageUrl);
+
+      const { error } = await supabase
+        .from('notes')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        toast.showToast('Gagal menghapus note', 'error');
+        return;
+      }
+
+      setNotes((prev) => prev.filter((n) => n.id !== id));
       toast.showToast('Note berhasil dihapus', 'success');
+    } catch {
+      toast.showToast('Terjadi kesalahan saat menghapus', 'error');
     }
   };
 
