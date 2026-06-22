@@ -10,6 +10,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useToast } from '@/components/Toast';
 import ImageCropper from '@/components/ImageCropper';
+import CameraCapture from '@/components/CameraCapture';
 
 interface Note {
   id: string; title: string; content: string; image_url?: string;
@@ -45,6 +46,7 @@ export default function EditNotePage() {
   const [dragOver, setDragOver]   = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showCamera, setShowCamera] = useState(false);
   const router = useRouter();
   const params = useParams();
   const noteId = params.id as string;
@@ -478,6 +480,26 @@ export default function EditNotePage() {
                       disabled={saving}
                       className="hidden"
                     />
+                    <div className="mt-3 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setShowCamera(true); }}
+                        disabled={saving}
+                        className="px-3 py-1 rounded-lg text-sm"
+                        style={{ background: '#F0E9D8', color: '#622B14', fontFamily: sf }}
+                      >
+                        📷 Gunakan Kamera
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+                        disabled={saving}
+                        className="px-3 py-1 rounded-lg text-sm"
+                        style={{ background: '#FFFDF7', border: '1px solid #E4D6A9', color: '#622B14', fontFamily: sf }}
+                      >
+                        Pilih dari Galeri
+                      </button>
+                    </div>
 
                     {/* Ganti foto jika sudah ada */}
                     {imagePreview && !removeImage && (
@@ -528,6 +550,13 @@ export default function EditNotePage() {
               setShowCropper(false);
               setCropImage(null);
             }}
+          />
+        )}
+        {showCamera && (
+          <CameraCapture
+            facingMode="environment"
+            onCapture={(file) => { processFile(file); setShowCamera(false); }}
+            onClose={() => setShowCamera(false)}
           />
         )}
       </main>

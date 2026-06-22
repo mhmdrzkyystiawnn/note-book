@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import Image from 'next/image';
 import ImageCropper from './ImageCropper';
+import CameraCapture from './CameraCapture';
 import { useToast } from './Toast';
 
 interface NoteFormProps {
@@ -22,6 +23,8 @@ export default function NoteForm({ onSubmit }: NoteFormProps) {
   const [loading, setLoading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const [cameraFacing, setCameraFacing] = useState<'environment' | 'user'>('environment');
   const toast = useToast();
 
   const processImageFile = (file: File) => {
@@ -252,6 +255,19 @@ export default function NoteForm({ onSubmit }: NoteFormProps) {
         )}
       </div>
 
+      {/* Ganti Kamera (di atas tombol Simpan) */}
+      <div className="flex gap-3">
+        <button
+          type="button"
+          onClick={() => setShowCamera(true)}
+          disabled={loading}
+          className="flex-1 px-3 py-2 rounded-lg text-sm cursor-pointer"
+          style={{ background: '#FFFDF7', border: '1px solid #E4D6A9', color: '#622B14' }}
+        >
+          📷 Buka Kamera
+        </button>
+      </div>
+
       {/* Tombol Simpan */}
       <button
         type="submit"
@@ -286,6 +302,13 @@ export default function NoteForm({ onSubmit }: NoteFormProps) {
             setShowCropper(false);
             setImagePreview(null);
           }}
+        />
+      )}
+      {showCamera && (
+        <CameraCapture
+          facingMode={cameraFacing}
+          onCapture={(file) => { processImageFile(file); setShowCamera(false); }}
+          onClose={() => setShowCamera(false)}
         />
       )}
     </form>
