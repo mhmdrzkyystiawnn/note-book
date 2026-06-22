@@ -24,7 +24,6 @@ export default function NoteForm({ onSubmit }: NoteFormProps) {
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showCamera, setShowCamera] = useState(false);
-  const [cameraFacing, setCameraFacing] = useState<'environment' | 'user'>('environment');
   const toast = useToast();
 
   const processImageFile = (file: File) => {
@@ -255,7 +254,7 @@ export default function NoteForm({ onSubmit }: NoteFormProps) {
         )}
       </div>
 
-      {/* Ganti Kamera (di atas tombol Simpan) */}
+      {/* Buka Kamera */}
       <div className="flex gap-3">
         <button
           type="button"
@@ -306,7 +305,6 @@ export default function NoteForm({ onSubmit }: NoteFormProps) {
       )}
       {showCamera && (
         <CameraCapture
-          facingMode={cameraFacing}
           onCapture={(file) => { processImageFile(file); setShowCamera(false); }}
           onClose={() => setShowCamera(false)}
         />

@@ -13,6 +13,7 @@ export default function CameraCapture({ facingMode = 'environment', onCapture, o
   const streamRef = useRef<MediaStream | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [internalFacing, setInternalFacing] = useState<'environment' | 'user'>(facingMode);
 
   useEffect(() => {
     let mounted = true;
@@ -21,7 +22,7 @@ export default function CameraCapture({ facingMode = 'environment', onCapture, o
       setError(null);
       setLoading(true);
       try {
-        const constraints: any = { video: { facingMode: facingMode } };
+        const constraints: any = { video: { facingMode: internalFacing } };
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         if (!mounted) {
           stream.getTracks().forEach((t) => t.stop());
@@ -53,7 +54,7 @@ export default function CameraCapture({ facingMode = 'environment', onCapture, o
       }
       if (videoRef.current) videoRef.current.srcObject = null;
     };
-  }, [facingMode]);
+  }, [internalFacing, facingMode]);
 
   const stopStream = () => {
     if (streamRef.current) {
@@ -99,6 +100,10 @@ export default function CameraCapture({ facingMode = 'environment', onCapture, o
     );
   };
 
+  const toggleFacing = () => {
+    setInternalFacing((f) => (f === 'environment' ? 'user' : 'environment'));
+  };
+
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
       <div className="bg-[#FEFAF0] rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl">
@@ -121,6 +126,7 @@ export default function CameraCapture({ facingMode = 'environment', onCapture, o
           )}
 
           <div className="mt-3 flex gap-3">
+            
             <button
               type="button"
               onClick={handleCapture}
@@ -136,6 +142,15 @@ export default function CameraCapture({ facingMode = 'environment', onCapture, o
               style={{ background: '#F0E9D8', color: '#622B14' }}
             >
               Batal
+            </button>
+            <button
+              type="button"
+              onClick={toggleFacing}
+              className="top-4 right-4 z-30 px-9 py-4 rounded-md text-sm"
+              style={{ background: '#F0E9D8', color: '#622B14' }}
+              aria-label="Ganti kamera"
+            >
+              {internalFacing === 'environment' ? '🔁 Belakang' : '🔁 Depan'}
             </button>
           </div>
         </div>
