@@ -89,6 +89,7 @@ export default function NoteList({ notes, onDelete }: NoteListProps) {
                         {note.emotion || '◻'}
                       </span>
                       <h3
+                      style={{ fontFamily: 'Georgia, serif' }}
                         className="
                           text-sm font-semibold leading-tight line-clamp-1
                           text-[#622B14]

@@ -140,6 +140,15 @@ export default function LoginPage() {
             </button>
           </div>
 
+          <div className="text-right">
+            <Link
+              href="/auth/forgot-password"
+              className="text-sm"
+              style={{ color: '#995F2F', fontFamily: georgiaFont }}
+            >
+              Lupa Password?
+            </Link>
+          </div>
           <div className="text-center">
             <Link
               href="/auth/signup"

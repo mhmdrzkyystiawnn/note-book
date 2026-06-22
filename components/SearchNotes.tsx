@@ -78,7 +78,7 @@ export default function SearchNotes({
         }}
       >
         <div className="flex items-center gap-2">
-          <span>Mood/Emosi</span>
+          <span style={{ fontFamily: georgiaFont }}>Mood/Emosi</span>
           {selectedMoods.length > 0 && (
             <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs" style={{ background: 'rgba(153, 95, 47, 0.15)' }}>
               {selectedMoods.join('')}
